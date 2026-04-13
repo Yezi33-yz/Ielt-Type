@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Login - IELTS Typer 猫舍入口</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <style type="text/tailwindcss">
+        :root {
+            --primary-color: #568203;
+            --primary-pale: #f4f7ed;
+            --sketch-ink: #1a1a1a;
+        }
+        @layer utilities {
+            .sketch-border {
+                border: 2px solid var(--sketch-ink);
+                border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            }
+            .paper-texture {
+                background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            }
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#568203",
+                        "primary-pale": "#f4f7ed",
+                        "sketch-ink": "#1a1a1a",
+                        "error-red": "#F4520D"
+                    },
+                    fontFamily: { "display": ["Lexend"] }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-white font-display text-sketch-ink min-h-screen paper-texture flex items-center justify-center p-6">
+
+<div class="w-full max-w-md">
+    <div class="bg-white p-10 sketch-border shadow-xl relative">
+
+        <div class="absolute -top-12 left-1/2 -translate-x-1/2 text-5xl">
+            🐱
+        </div>
+
+        <header class="text-center mb-10">
+            <h2 class="text-3xl font-bold tracking-tight mb-2">欢迎回来</h2>
+            <p class="text-sm opacity-40 uppercase tracking-widest font-bold">IELTS Typer</p>
+        </header>
+
+        <div class="space-y-6">
+            <div class="group">
+                <div class="sketch-border bg-white p-3 flex items-center gap-3 focus-within:border-primary focus-within:bg-primary-pale transition-all">
+                    <span class="material-icons opacity-30 group-focus-within:text-primary">person_outline</span>
+                    <input type="text" id="identifier" placeholder="手机号 / 邮箱"
+                           class="w-full bg-transparent border-none focus:ring-0 text-lg outline-none placeholder:opacity-20">
+                </div>
+            </div>
+
+            <div class="group">
+                <div class="sketch-border bg-white p-3 flex items-center gap-3 focus-within:border-primary focus-within:bg-primary-pale transition-all">
+                    <span class="material-icons opacity-30 group-focus-within:text-primary">lock_open</span>
+                    <input type="password" id="password" placeholder="请输入密码"
+                           class="w-full bg-transparent border-none focus:ring-0 text-lg outline-none placeholder:opacity-20">
+                </div>
+            </div>
+
+            <button onclick="handleLogin()"
+                    class="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg hover:scale-[1.02] transition-transform shadow-lg active:scale-95">
+                登录
+            </button>
+        </div>
+
+        <div class="mt-10 pt-8 border-t border-sketch-ink/10 border-dashed text-center">
+            <p class="text-xs font-bold opacity-30 uppercase tracking-widest mb-6">快捷进入</p>
+            <div class="flex justify-center gap-8">
+                <button onclick="loginWith('wechat')" class="w-12 h-12 rounded-full border-2 border-sketch-ink flex items-center justify-center hover:bg-primary-pale transition-colors group">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3670/3670051.png" class="w-6 h-6 grayscale group-hover:grayscale-0 transition-all opacity-40 group-hover:opacity-100" alt="WeChat">
+                </button>
+                <button onclick="loginWith('qq')" class="w-12 h-12 rounded-full border-2 border-sketch-ink flex items-center justify-center hover:bg-primary-pale transition-colors group">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2111/2111621.png" class="w-6 h-6 grayscale group-hover:grayscale-0 transition-all opacity-40 group-hover:opacity-100" alt="QQ">
+                </button>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="register.html" class="text-xs font-bold text-primary hover:underline underline-offset-4 tracking-wider">
+                还没有账号？点击注册
+            </a>
+        </div>
+    </div>
+
+    <p class="text-center mt-8 text-[10px] font-bold opacity-20 uppercase tracking-[0.3em]">
+        Design for IELTS Learners & Cat Lovers
+    </p>
+</div>
+
+<script>
+    async function handleLogin() {
+        // 从输入框读取用户填写的值
+        const identifier = document.getElementById('identifier').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        // 简单的前端校验
+        if (!identifier || !password) {
+            alert("请填写账号和密码");
+            return;
+        }
+
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifier, password })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            localStorage.setItem('jwt_token', data.token);
+            sessionStorage.setItem('loginUser', data.username);
+            location.href = 'home.html';
+        } else {
+            alert("账号或密码不正确");
+        }
+    }
+
+    function loginWith(platform) {
+        alert("正在连接 " + platform + " 授权服务器...");
+    }
+</script>
+</body>
+</html>

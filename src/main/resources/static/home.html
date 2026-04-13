@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>IELTS Typer - 猫舍大本营</title>
+    <script src="js/auth.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+
+    <style type="text/tailwindcss">
+        :root {
+            --primary-color: #568203;
+            --primary-pale: #f4f7ed;
+            --sketch-ink: #1a1a1a;
+        }
+        @layer utilities {
+            .sketch-border {
+                border: 2px solid var(--sketch-ink);
+                border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            }
+            .sketch-line {
+                height: 4px;
+                background: var(--sketch-ink);
+                border-radius: 50% 20% 40% 10%;
+            }
+            .sketch-progress {
+                background: var(--primary-color);
+                height: 6px;
+                border-radius: 50% 20% 40% 10%;
+                transition: width 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            .paper-texture {
+                background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            }
+        }
+    </style>
+
+    <style>
+        /* ── 词书行卡片 ── */
+        .book-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            /* 与主卡片保持一致的 sketch 风格黑色边框 */
+            border: 2px solid #1a1a1a;
+            border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #fff;
+            box-shadow: 4px 4px 0px rgba(26,26,26,0.06);
+        }
+        .book-row:hover {
+            border-color: #568203;
+            box-shadow: 4px 4px 0 rgba(86,130,3,0.18);
+            transform: translateX(4px);
+        }
+        .book-row.active {
+            border-color: #568203;
+            background: #f4f7ed;
+            box-shadow: 4px 4px 0 rgba(86,130,3,0.18);
+        }
+
+        /* ── 封面缩略图 ── */
+        .book-cover-thumb {
+            width: 64px;
+            height: 84px;
+            border-radius: 8px;
+            border: 2px solid rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 11px;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            line-height: 1.4;
+            padding: 6px;
+        }
+
+        /* ── 词书信息区 ── */
+        .book-row-body   { flex: 1; min-width: 0; }
+        .book-row-top    { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+        .book-row-name   { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+        .book-row-count  { font-size: 14px; color: #568203; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+        .book-row-desc   { font-size: 12px; color: #bbb; margin-bottom: 10px; }
+        .book-bar-wrap   { height: 5px; background: #efefef; border-radius: 4px; overflow: hidden; }
+        .book-bar        {
+            height: 100%;
+            background: linear-gradient(90deg, #568203, #8fc96e);
+            border-radius: 4px;
+            transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* ── 状态标签 ── */
+        .book-badge {
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+            padding: 5px 14px;
+            border-radius: 20px;
+        }
+        .book-badge.is-active { background: #f4f7ed; color: #568203; border: 1.5px solid #568203; }
+        .book-badge.is-idle   { background: #f5f5f5; color: #bbb;    border: 1.5px solid #e0e0e0; }
+
+        /* ── 骨架屏 ── */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 6px;
+        }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#568203",
+                        "primary-pale": "#f4f7ed",
+                        "sketch-ink": "#1a1a1a",
+                        "error-red": "#F4520D"
+                    },
+                    fontFamily: { "display": ["Lexend", "sans-serif"] }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-white font-display text-sketch-ink min-h-screen paper-texture">
+
+<!-- ══════════════════ 顶部导航 ══════════════════ -->
+<header class="w-full border-b-2 border-sketch-ink/20 border-dashed sticky top-0 bg-white/90 backdrop-blur z-50">
+    <div class="relative flex justify-between items-center py-5 px-8 max-w-[1920px] mx-auto">
+
+        <div class="flex items-center gap-2 cursor-pointer hover:-translate-y-1 transition-transform z-20" onclick="location.reload()">
+            <span class="material-icons text-primary text-3xl">pets</span>
+            <span class="font-bold text-2xl tracking-tight">IELTS Typer</span>
+        </div>
+
+        <nav class="hidden xl:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl px-12 justify-between items-center z-10 pointer-events-none">
+            <a href="home.html" class="w-32 text-center py-2.5 bg-primary text-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:-translate-y-1 transition-transform cursor-pointer pointer-events-auto">主页</a>
+            <a href="review.html" class="w-32 text-center py-2.5 bg-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:-translate-y-1 hover:bg-primary-pale transition-all cursor-pointer pointer-events-auto">错词本</a>
+            <a href="stats.html" class="w-32 text-center py-2.5 bg-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:-translate-y-1 hover:bg-primary-pale transition-all cursor-pointer pointer-events-auto">学习统计</a>
+            <a href="dictation.html" class="w-32 text-center py-2.5 bg-yellow-400 font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:-translate-y-1 hover:bg-yellow-300 transition-all cursor-pointer pointer-events-auto">听写模式</a>
+        </nav>
+
+        <div class="relative group z-20">
+            <div class="flex items-center gap-3 px-4 py-2 border-2 border-sketch-ink bg-white shadow-[4px_4px_0px_rgba(26,26,26,0.1)] cursor-pointer hover:bg-gray-50 transition-colors sketch-border">
+                <span class="text-sm font-bold" id="userNameDisplay">加载中...</span>
+                <div class="w-8 h-8 bg-primary flex items-center justify-center text-white text-sm font-bold border-2 border-sketch-ink rounded-full" id="userAvatar">U</div>
+            </div>
+            <div class="absolute top-full left-0 right-0 h-4 hidden group-hover:block"></div>
+            <div class="absolute right-0 top-full mt-3 w-56 bg-white sketch-border hidden group-hover:block z-50 shadow-xl">
+                <div class="p-2 space-y-1">
+                    <div class="px-4 py-3 cursor-pointer hover:bg-primary-pale rounded-lg flex items-center justify-between transition-colors" onclick="location.href='vip.html'">
+                        <span id="vipLabel" class="font-bold text-yellow-600 text-sm">💎 普通用户</span>
+                        <span class="text-xs opacity-50 font-bold">特权 ></span>
+                    </div>
+                    <div class="h-[2px] w-full sketch-line opacity-10 my-2"></div>
+                    <div class="px-4 py-2 text-sm font-medium cursor-pointer hover:bg-primary-pale rounded-lg transition-colors flex items-center gap-2" onclick="location.href='avatar.html'">
+                        <span class="material-icons text-sm opacity-60">face</span> 更换头像
+                    </div>
+                    <div class="px-4 py-2 text-sm font-medium cursor-pointer hover:bg-primary-pale rounded-lg transition-colors flex items-center gap-2" onclick="location.href='themes.html'">
+                        <span class="material-icons text-sm opacity-60">palette</span> 主题设置
+                    </div>
+                    <div class="h-[2px] w-full sketch-line opacity-10 my-2"></div>
+                    <div class="px-4 py-2 text-sm font-bold text-error-red cursor-pointer hover:bg-error-red hover:text-white sketch-border transition-colors flex items-center gap-2 mt-2" onclick="handleLogout()">
+                        <span class="material-icons text-sm">logout</span> 退出登录
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ══════════════════ 主体内容 ══════════════════ -->
+<main class="max-w-4xl mx-auto px-6 py-6 flex flex-col min-h-screen">
+
+    <h2 class="text-3xl font-bold mb-10">继续学习</h2>
+
+    <!-- 当前词书主卡片 -->
+    <div class="flex flex-col md:flex-row gap-12 bg-white p-10 sketch-border mb-16 items-center">
+
+        <!-- 封面（点击弹出目标设定） -->
+        <div id="currentCover"
+             class="w-48 h-64 sketch-border flex flex-col justify-center items-center cursor-pointer hover:-translate-y-2 hover:rotate-2 transition-all text-white shadow-[8px_8px_0px_rgba(26,26,26,0.1)] flex-shrink-0"
+             style="background-color: #568203;"
+             onclick="showGoalModal()">
+            <div class="text-6xl mb-4">📖</div>
+            <div class="font-bold text-xl tracking-wider text-center px-3 leading-snug" id="currentCoverText">雅思真经</div>
+        </div>
+
+        <!-- 词书信息 -->
+        <div class="flex-1 w-full flex flex-col justify-center">
+            <h3 class="text-4xl font-bold mb-2" id="currentBookName">加载中...</h3>
+            <p class="opacity-60 italic mb-8 font-medium" id="currentBookDesc">坚持每日投喂小猫，雅思上岸指日可待！</p>
+
+            <div class="mb-8 w-full">
+                <div class="flex justify-between items-end mb-4 px-1">
+                    <span class="text-xs font-bold tracking-widest opacity-40 uppercase">词书总进度</span>
+                    <span class="text-xl font-bold text-primary" id="progressValue">— / —</span>
+                </div>
+                <div class="relative h-6 w-full flex items-center">
+                    <div class="w-full sketch-line opacity-10 absolute"></div>
+                    <div id="progressFill" class="w-0 sketch-progress absolute"></div>
+                </div>
+                <div class="mt-2 text-xs opacity-40 text-right font-medium px-1">累计掌握单词 / 词库总量</div>
+            </div>
+
+            <button class="px-10 py-3 bg-sketch-ink text-white font-bold sketch-border hover:bg-primary hover:-translate-y-1 transition-all flex items-center justify-center gap-2 shadow-[4px_4px_0px_rgba(86,130,3,0.3)]"
+                    onclick="showGoalModal()">
+                <span class="material-icons text-lg">edit_note</span>
+                开始学习
+            </button>
+        </div>
+    </div>
+
+    <!-- 词书库列表 -->
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold">词书库</h3>
+        <span class="text-xs font-bold text-primary border-b-2 border-primary border-dashed pb-0.5 cursor-pointer hover:opacity-60">管理词书 ></span>
+    </div>
+
+    <!-- 骨架屏 -->
+    <div id="bookSkeleton">
+        <div class="flex items-center gap-4 p-5 mb-4 sketch-border">
+            <div class="skeleton w-16 h-20 flex-shrink-0 rounded-lg"></div>
+            <div class="flex-1">
+                <div class="skeleton h-4 w-40 mb-2 rounded"></div>
+                <div class="skeleton h-3 w-28 mb-4 rounded"></div>
+                <div class="skeleton h-1.5 w-full rounded"></div>
+            </div>
+            <div class="skeleton h-7 w-20 rounded-full flex-shrink-0"></div>
+        </div>
+        <div class="flex items-center gap-4 p-5 mb-4 sketch-border">
+            <div class="skeleton w-16 h-20 flex-shrink-0 rounded-lg"></div>
+            <div class="flex-1">
+                <div class="skeleton h-4 w-32 mb-2 rounded"></div>
+                <div class="skeleton h-3 w-24 mb-4 rounded"></div>
+                <div class="skeleton h-1.5 w-full rounded"></div>
+            </div>
+            <div class="skeleton h-7 w-20 rounded-full flex-shrink-0"></div>
+        </div>
+    </div>
+
+    <div id="bookList" class="mb-12" style="display:none;"></div>
+
+</main>
+
+<!-- ══════════════════ 目标弹窗 ══════════════════ -->
+<div id="goalModal" class="fixed inset-0 z-[2000] items-center justify-center bg-black/40 backdrop-blur-sm" style="display:none;">
+    <div class="bg-white p-10 sketch-border max-w-sm w-full mx-4 text-center shadow-2xl relative">
+        <button onclick="closeGoalModal()" class="absolute top-4 right-4 text-sketch-ink/50 hover:text-sketch-ink">
+            <span class="material-icons">close</span>
+        </button>
+        <h2 class="text-3xl font-bold mb-2 text-primary">🐱 开启挑战</h2>
+        <p class="text-xs opacity-50 mb-1">当前词书</p>
+        <p class="text-sm font-bold mb-5 opacity-70" id="modalBookName">—</p>
+        <p class="text-sm opacity-60 mb-4">设定今天想喂猫的单词数量</p>
+        <input type="number" id="goalInput" value="20" min="5" step="5"
+               class="w-24 text-center text-3xl font-bold border-b-4 border-primary outline-none mb-8 bg-transparent text-sketch-ink"/>
+        <button onclick="confirmGoalAndStart()"
+                class="w-full py-4 bg-primary text-white font-bold sketch-border hover:bg-sketch-ink transition-colors">
+            确认并开始背词 →
+        </button>
+    </div>
+</div>
+
+<!-- ══════════════════ 脚本 ══════════════════ -->
+<script>
+    // ── 全局变量 ─────────────────────────────────────────
+    const currentUser    = sessionStorage.getItem('loginUser');
+    let   currentBookName = localStorage.getItem('currentBook') || '';
+    let   allBooks        = [];   // 所有词书数据
+
+
+
+    // ── 页面初始化 ────────────────────────────────────────
+    window.onload = async function () {
+        if (!currentUser) {
+            alert('喵？请先登录猫舍！');
+            location.href = 'login.html';
+            return;
+        }
+        document.getElementById('userNameDisplay').innerText = currentUser;
+        document.getElementById('userAvatar').innerText      = currentUser.charAt(0).toUpperCase();
+
+        // 并发加载：词书列表 + 用户信息
+        await Promise.all([loadBooks(), loadUserInfo()]);
+    };
+
+    // ── 加载词书列表 ──────────────────────────────────────
+    async function loadBooks() {
+        try {
+            // 【关键修改】在 URL 后面拼接当前登录的用户名
+            const res = await fetch(`/api/words/books?username=${currentUser}`);
+            if (!res.ok) throw new Error('failed');
+            allBooks = await res.json();
+
+            if (!allBooks.find(b => b.bookName === currentBookName) && allBooks.length > 0) {
+                currentBookName = allBooks[0].bookName;
+                localStorage.setItem('currentBook', currentBookName);
+            }
+
+            renderBookList();
+            updateCurrentCard();
+        } catch (e) {
+            document.getElementById('bookSkeleton').innerHTML =
+                '<p class="text-center text-sm text-gray-400 py-8">词书加载失败，请检查网络</p>';
+            console.error('loadBooks', e);
+        }
+    }
+
+    // ── 渲染词书行列表 ────────────────────────────────────
+    function renderBookList() {
+        const container = document.getElementById('bookList');
+        container.innerHTML = '';
+
+        allBooks.forEach(book => {
+            const isActive = book.bookName === currentBookName;
+
+            // 【关键修改】直接使用后端返回的 learnedCount 字段
+            const learned  = book.learnedCount || 0;
+            const total    = book.totalWords || 0;
+            const percent  = total > 0 ? Math.min(Math.round(learned / total * 100), 100) : 0;
+
+            const div = document.createElement('div');
+            // ... 下面渲染 HTML 的代码保持不变 ...
+            div.className = `book-row${isActive ? ' active' : ''}`;
+            div.innerHTML = `
+            <div class="book-cover-thumb" style="background-color:${book.color || '#568203'}">
+                ${escHtml(book.coverText || book.displayName?.slice(0, 4) || '词书')}
+            </div>
+            <div class="book-row-body">
+                <div class="book-row-top">
+                    <span class="book-row-name">${escHtml(book.displayName)}</span>
+                    <span class="book-row-count">${learned} / ${total}</span>
+                </div>
+                <div class="book-row-desc">${escHtml(book.description || '')}</div>
+                <div class="book-bar-wrap">
+                    <div class="book-bar" style="width:0%" data-w="${percent}"></div>
+                </div>
+            </div>
+            <span class="book-badge ${isActive ? 'is-active' : 'is-idle'}">
+                ${isActive ? '✓ 学习中' : '选择 →'}
+            </span>
+        `;
+            div.onclick = () => selectBook(book.bookName);
+            container.appendChild(div);
+        });
+
+        document.getElementById('bookSkeleton').style.display = 'none';
+        container.style.display = 'block';
+
+        // 进度条入场动画
+        requestAnimationFrame(() => setTimeout(() => {
+            container.querySelectorAll('.book-bar').forEach(el => {
+                el.style.width = el.dataset.w + '%';
+            });
+        }, 80));
+    }
+
+    // ── 更新顶部"继续学习"主卡片 ─────────────────────────
+    function updateCurrentCard() {
+        const book = allBooks.find(b => b.bookName === currentBookName);
+        if (!book) return;
+
+        // 【关键修改】同样改为使用 book.learnedCount
+        const learned = book.learnedCount || 0;
+        const total   = book.totalWords || 0;
+        // ... 下面代码保持不变 ...
+        const pct     = total > 0 ? Math.min(learned / total * 100, 100) : 0;
+
+        // 封面颜色 & 文字
+        document.getElementById('currentCover').style.backgroundColor = book.color || '#568203';
+        document.getElementById('currentCoverText').innerText          = book.coverText || book.displayName;
+
+        // 书名 & 描述
+        document.getElementById('currentBookName').innerText  = book.displayName;
+        document.getElementById('currentBookDesc').innerText  = book.description || '坚持每日投喂小猫，雅思上岸指日可待！';
+
+        // 进度
+        document.getElementById('progressValue').innerText    = `${learned} / ${total}`;
+        document.getElementById('modalBookName').innerText    = book.displayName;
+        setTimeout(() => {
+            document.getElementById('progressFill').style.width = pct + '%';
+        }, 200);
+    }
+
+    // ── 切换词书 ──────────────────────────────────────────
+    async function selectBook(bookName) {
+        // 已是当前词书 → 直接弹开始学习弹窗
+        if (bookName === currentBookName) {
+            showGoalModal();
+            return;
+        }
+
+        // 1. 本地立即切换（UI 即时响应）
+        currentBookName = bookName;
+        localStorage.setItem('currentBook', bookName);
+        renderBookList();
+        updateCurrentCard();
+
+        // 2. 静默同步到数据库
+        try {
+            await authFetch('/api/auth/user/switchBook', {
+                method: 'POST',
+                body: JSON.stringify({ username: currentUser, bookName: bookName })
+            });
+        } catch (e) {
+            // 同步失败不影响本地使用，仅打日志
+            console.error('switchBook 同步失败', e);
+        }
+    }
+
+    // ── 加载用户信息（VIP 状态） ──────────────────────────
+    async function loadUserInfo() {
+        try {
+            const res = await authFetch(`/api/auth/user/info?username=${currentUser}`);
+            if (!res || !res.ok) return;
+            const text = await res.text();
+            if (!text) return;
+            const user = JSON.parse(text);
+
+            if (user.vip) {
+                const el = document.getElementById('vipLabel');
+                if (el) el.innerText = '💎 VIP 会员';
+            }
+
+            // 如果后端记录了 currentBook，以数据库为准（多设备同步）
+            if (user.currentBook && user.currentBook !== currentBookName) {
+                currentBookName = user.currentBook;
+                localStorage.setItem('currentBook', currentBookName);
+                // 等词书列表加载完毕后会自动刷新，这里触发一次
+                if (allBooks.length > 0) {
+                    renderBookList();
+                    updateCurrentCard();
+                }
+            }
+        } catch (e) {
+            console.error('loadUserInfo', e);
+        }
+    }
+
+    // ── 获取本地已学词数 ──────────────────────────────────
+    // 说明：词书进度以 localStorage 为主存储，key = learned_{用户名}_{词书名}
+    // index.html 每答对一个词时执行：
+    //   localStorage.setItem(`learned_${username}_${bookName}`, count)
+    function getLearnedCount(bookName) {
+        return parseInt(localStorage.getItem(`learned_${currentUser}_${bookName}`) || 0);
+    }
+
+    // ── 目标弹窗 ──────────────────────────────────────────
+    function showGoalModal() {
+        const book = allBooks.find(b => b.bookName === currentBookName);
+        document.getElementById('modalBookName').innerText = book?.displayName || currentBookName || '当前词书';
+        document.getElementById('goalModal').style.display = 'flex';
+    }
+    function closeGoalModal() {
+        document.getElementById('goalModal').style.display = 'none';
+    }
+    document.getElementById('goalModal').addEventListener('click', e => {
+        if (e.target === document.getElementById('goalModal')) closeGoalModal();
+    });
+
+    async function confirmGoalAndStart() {
+        const goal = parseInt(document.getElementById('goalInput').value) || 20;
+        try {
+            const res = await authFetch('/api/auth/user/updateProgress', {
+                method: 'POST',
+                body: JSON.stringify({ username: currentUser, currentCount: 0, dailyGoal: goal })
+            });
+            if (res && res.ok) {
+                localStorage.setItem('currentBook', currentBookName);
+                window.location.href = 'index.html';
+            } else {
+                alert('同步失败，请检查网络');
+            }
+        } catch (e) {
+            console.error('confirmGoalAndStart', e);
+        }
+    }
+
+    // ── 退出登录 ──────────────────────────────────────────
+    function handleLogout() {
+        if (confirm('确定要离开猫舍吗？进度已同步至云端。')) {
+            localStorage.removeItem('jwt_token');
+            sessionStorage.removeItem('loginUser');
+            location.href = 'login.html';
+        }
+    }
+
+    // ── 工具函数 ──────────────────────────────────────────
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+</script>
+
+</body>
+</html>

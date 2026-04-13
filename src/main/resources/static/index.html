@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Vocab Practice - IELTS Typer</title>
+    <script src="js/auth.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+
+    <style type="text/tailwindcss">
+        :root {
+            --primary-color: #568203;
+            --primary-pale: #f4f7ed;
+            --sketch-ink: #1a1a1a;
+        }
+        @layer utilities {
+            .sketch-border {
+                border: 2px solid var(--sketch-ink);
+                border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            }
+            .sketch-line {
+                height: 4px;
+                background: var(--sketch-ink);
+                border-radius: 50% 20% 40% 10%;
+            }
+            .sketch-progress {
+                background: var(--primary-color);
+                height: 6px;
+                border-radius: 50% 20% 40% 10%;
+                transition: width 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            .paper-texture {
+                background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            }
+        }
+    </style>
+
+    <style>
+        @keyframes hintSlideIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        #correctWordHint { animation: hintSlideIn 0.2s ease both; }
+        .group:hover .group-hover\:block { display: block; }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#568203",
+                        "primary-pale": "#f4f7ed",
+                        "sketch-ink": "#1a1a1a",
+                        "error-red": "#F4520D"
+                    },
+                    fontFamily: { "display": ["Lexend", "sans-serif"] }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-white font-display text-sketch-ink min-h-screen paper-texture flex flex-col">
+
+<header class="w-full border-b-2 border-sketch-ink/20 border-dashed sticky top-0 bg-white/90 backdrop-blur z-50">
+    <div class="relative flex justify-between items-center py-5 px-8 max-w-[1920px] mx-auto">
+        <div class="flex items-center gap-2 cursor-pointer hover:-translate-y-1 transition-transform z-20" onclick="location.href='home.html'">
+            <span class="material-icons text-primary text-3xl">pets</span>
+            <span class="font-bold text-2xl tracking-tight">IELTS Typer</span>
+        </div>
+        <nav class="hidden xl:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl px-12 justify-between items-center z-10 pointer-events-none">
+            <a href="home.html" class="w-32 text-center py-2.5 bg-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:bg-primary hover:text-white transition-all cursor-pointer pointer-events-auto">主页</a>
+            <a href="review.html" class="w-32 text-center py-2.5 bg-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:bg-primary hover:text-white transition-all cursor-pointer pointer-events-auto">错词本</a>
+            <a href="stats.html" class="w-32 text-center py-2.5 bg-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:bg-primary hover:text-white transition-all cursor-pointer pointer-events-auto">学习统计</a>
+            <a href="dictation.html" class="w-32 text-center py-2.5 bg-yellow-400 font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:-translate-y-1 hover:bg-yellow-300 transition-all cursor-pointer pointer-events-auto">听写模式</a>
+        </nav>
+        <div class="relative group z-20">
+            <div class="flex items-center gap-3 px-4 py-2 border-2 border-sketch-ink bg-white shadow-[4px_4px_0px_rgba(26,26,26,0.1)] cursor-pointer hover:bg-gray-50 transition-colors sketch-border">
+                <span class="text-sm font-bold" id="userNameDisplay">加载中...</span>
+                <div class="w-8 h-8 bg-primary flex items-center justify-center text-white text-sm font-bold border-2 border-sketch-ink rounded-full" id="userAvatar">U</div>
+            </div>
+            <div class="absolute top-full right-0 mt-3 w-56 bg-white sketch-border hidden group-hover:block z-50 shadow-xl">
+                <div class="p-2 space-y-1">
+                    <div class="px-4 py-3 cursor-pointer hover:bg-primary-pale rounded-lg flex items-center justify-between transition-colors" onclick="location.href='vip.html'">
+                        <span id="vipLabel" class="font-bold text-yellow-600 text-sm">💎 普通用户</span>
+                    </div>
+                    <div class="h-[2px] w-full sketch-line opacity-10 my-2"></div>
+                    <div class="px-4 py-2 text-sm font-bold text-error-red cursor-pointer hover:bg-error-red hover:text-white sketch-border transition-colors flex items-center gap-2 mt-2" onclick="logout()">退出登录</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="max-w-4xl mx-auto px-6 py-12 flex flex-col flex-1 w-full">
+
+    <header id="progress-container" class="mb-20 w-full transition-opacity duration-500">
+        <div class="flex justify-between items-end mb-6 px-2">
+            <span class="text-xs font-bold tracking-widest opacity-40 uppercase" id="cat-status">正在连接...</span>
+            <span class="text-sm font-semibold text-primary" id="progressText">0 / 0 Words</span>
+        </div>
+        <div class="relative h-12 w-full flex items-center">
+            <div class="w-full sketch-line opacity-10 absolute"></div>
+            <div id="progressFill" class="w-0 sketch-progress absolute"></div>
+            <div id="cat-avatar" class="absolute transition-all duration-700 -top-5" style="left:0%;"><span class="text-4xl">🐱</span></div>
+            <div class="absolute inset-0 flex justify-between items-center px-2">
+                <span class="marker text-xl opacity-20 filter grayscale" data-threshold="25">🐟</span>
+                <span class="marker text-xl opacity-20 filter grayscale" data-threshold="50">🐟</span>
+                <span class="marker text-xl opacity-20 filter grayscale" data-threshold="75">🐟</span>
+                <span class="marker text-2xl opacity-20 filter grayscale" data-threshold="100">🍖</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="practice-area" class="flex-grow flex flex-col items-center space-y-10 w-full">
+        <div class="w-full max-w-md">
+            <div id="inputBoxContainer" class="sketch-border bg-white p-4 transition-all duration-300">
+                <input id="userInput" autofocus autocomplete="off" class="w-full bg-transparent border-none focus:ring-0 text-4xl text-center font-display transition-all outline-none placeholder:opacity-10" placeholder="Type here..." type="text"/>
+            </div>
+            <div id="correctWordHint" style="display:none;" class="mt-3 py-4 px-6 sketch-border bg-primary-pale text-center">
+                <p class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">正确拼写</p>
+                <p id="correctWordText" class="text-4xl font-bold text-primary tracking-widest mb-1"></p>
+                <p class="text-[10px] opacity-40">按 Enter 继续</p>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center gap-4">
+            <button onclick="playAudio()" class="w-14 h-14 rounded-full border-2 border-sketch-ink flex items-center justify-center hover:bg-primary-pale hover:border-primary hover:text-primary transition-all">
+                <span class="material-icons text-2xl">volume_up</span>
+            </button>
+            <p id="phonetic" class="text-xl font-light italic tracking-wide text-gray-400">/ ... /</p>
+        </div>
+
+        <div class="text-center w-full">
+            <div class="inline-block p-10 sketch-border bg-white relative min-w-[300px]">
+                <h2 id="meaning" class="text-4xl font-bold tracking-tight mb-2">载入中...</h2>
+                <p id="example" class="text-base font-medium opacity-60 max-w-sm italic mt-4" style="display:none;"></p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<template id="complete-template">
+    <div class="text-center p-16 sketch-border bg-primary-pale w-full max-w-4xl mx-auto mt-6 animate-bounce-in">
+        <h2 class="text-7xl mb-8">🏆</h2>
+        <h2 class="text-5xl font-bold text-primary mb-3">本组目标已结束</h2>
+        <h3 class="text-3xl font-bold text-sketch-ink mb-10">真棒！</h3>
+        <p class="opacity-50 mb-12 font-medium">进度已实时同步至猫舍云端</p>
+        <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <button onclick="location.href='home.html'" class="w-52 py-4 bg-white font-bold sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:bg-gray-50 transition-all">
+                休息一下
+            </button>
+            <button onclick="restartPractice()" class="w-52 py-4 bg-primary text-white font-bold sketch-border shadow-[4px_4px_0px_#1a1a1a] hover:-translate-y-1 transition-all">
+                再来一组
+            </button>
+        </div>
+    </div>
+</template>
+
+<script>
+    const currentUser = sessionStorage.getItem('loginUser');
+    const currentBook = localStorage.getItem('currentBook') || '雅思真题词汇精华';
+    let studyStartTime = Date.now();
+    let currentWord = {}, dailyGoal = 20, currentCount = 0;
+    let baseCountOffset = 0; // 支持“再来一组”的视觉位移
+    let isShowingHint = false;
+
+    // 缓存原始 HTML 结构
+    const originalPracticeHTML = `
+        <div class="w-full max-w-md">
+            <div id="inputBoxContainer" class="sketch-border bg-white p-4 transition-all duration-300">
+                <input id="userInput" autofocus autocomplete="off" class="w-full bg-transparent border-none focus:ring-0 text-4xl text-center font-display transition-all outline-none placeholder:opacity-10" placeholder="Type here..." type="text"/>
+            </div>
+            <div id="correctWordHint" style="display:none;" class="mt-3 py-4 px-6 sketch-border bg-primary-pale text-center">
+                <p class="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">正确拼写</p>
+                <p id="correctWordText" class="text-4xl font-bold text-primary tracking-widest mb-1"></p>
+                <p class="text-[10px] opacity-40">按 Enter 继续</p>
+            </div>
+        </div>
+        <div class="flex flex-col items-center gap-4">
+            <button onclick="playAudio()" class="w-14 h-14 rounded-full border-2 border-sketch-ink flex items-center justify-center hover:bg-primary-pale hover:border-primary hover:text-primary transition-all">
+                <span class="material-icons text-2xl">volume_up</span>
+            </button>
+            <p id="phonetic" class="text-xl font-light italic tracking-wide text-gray-400">/ ... /</p>
+        </div>
+        <div class="text-center w-full">
+            <div class="inline-block p-10 sketch-border bg-white relative min-w-[300px]">
+                <h2 id="meaning" class="text-4xl font-bold tracking-tight mb-2">载入中...</h2>
+                <p id="example" class="text-base font-medium opacity-60 max-w-sm italic mt-4" style="display:none;"></p>
+            </div>
+        </div>`;
+
+    window.onload = async () => {
+        if (!currentUser) { location.href = 'login.html'; return; }
+        await initGlobalUI();
+        updateProgressUI(); // 初始 0%
+        await fetchUserInfo();
+    };
+
+    async function fetchUserInfo() {
+        const res = await authFetch(`/api/auth/user/info?username=${currentUser}`);
+        const user = await res.json();
+        dailyGoal = user.dailyGoal || 20;
+        currentCount = user.currentCount || 0;
+        document.getElementById('cat-status').innerText = "学习中...";
+        updateProgressUI();
+        if (currentCount >= dailyGoal) handleMissionComplete(); else fetchNextWord();
+    }
+
+    async function fetchNextWord() {
+        const res = await authFetch(`/api/words/random?book=${encodeURIComponent(currentBook)}`);
+        currentWord = await res.json();
+        document.getElementById('meaning').innerText = currentWord.meaning;
+        document.getElementById('phonetic').innerText = currentWord.phonetic || '/ ... /';
+        document.getElementById('example').innerText = currentWord.example || '';
+        document.getElementById('example').style.display = 'none';
+        resetInput();
+        setTimeout(() => playAudio(), 300);
+    }
+
+    function bindEvents() {
+        const inputField = document.getElementById('userInput');
+        const inputContainer = document.getElementById('inputBoxContainer');
+
+        inputField.addEventListener('input', () => {
+            if (isShowingHint) return;
+            const val = inputField.value.trim().toLowerCase(), target = currentWord.spelling.toLowerCase();
+            if (val === target) {
+                inputContainer.style.borderColor = 'var(--primary-color)';
+                document.getElementById('example').style.display = 'block';
+            } else if (target.startsWith(val)) {
+                inputContainer.style.borderColor = 'var(--sketch-ink)';
+            } else {
+                inputContainer.style.borderColor = 'var(--error-red)';
+            }
+        });
+
+        inputField.addEventListener('keydown', async (e) => {
+            if (e.key !== 'Enter') return;
+            if (isShowingHint) { hideHint(); return; }
+            if (inputField.value.trim().toLowerCase() === currentWord.spelling.toLowerCase()) {
+                currentCount++;
+                updateProgressUI();
+                await authFetch('/api/words/success', { method: 'POST', body: JSON.stringify({ username: currentUser, wordId: currentWord.id })});
+                await authFetch('/api/auth/user/updateProgress', { method: 'POST', body: JSON.stringify({ username: currentUser, currentCount: currentCount, dailyGoal: dailyGoal, studyMinutes: Math.floor((Date.now()-studyStartTime)/60000)})});
+
+                if (currentCount >= (dailyGoal + baseCountOffset)) handleMissionComplete(); else fetchNextWord();
+            } else {
+                handleErrorEffect();
+            }
+        });
+    }
+
+    // 初次启动绑定
+    bindEvents();
+
+    function handleErrorEffect() {
+        document.getElementById('inputBoxContainer').style.borderColor = 'var(--error-red)';
+        document.getElementById('correctWordText').innerText = currentWord.spelling;
+        document.getElementById('correctWordHint').style.display = 'block';
+        isShowingHint = true;
+        playAudio();
+    }
+
+    function hideHint() {
+        document.getElementById('correctWordHint').style.display = 'none';
+        isShowingHint = false;
+        document.getElementById('inputBoxContainer').style.borderColor = 'var(--sketch-ink)';
+        if(document.getElementById('userInput')) document.getElementById('userInput').value = '';
+    }
+
+    function resetInput() { hideHint(); if(document.getElementById('userInput')) document.getElementById('userInput').focus(); }
+
+    function updateProgressUI() {
+        const displayCount = currentCount - baseCountOffset;
+        const percent = Math.min((displayCount / dailyGoal) * 100, 100);
+        document.getElementById('progressFill').style.width = `${percent}%`;
+        document.getElementById('cat-avatar').style.left = `calc(${percent}% - 20px)`;
+        document.getElementById('progressText').innerText = `${displayCount} / ${dailyGoal} Words`;
+    }
+
+    function handleMissionComplete() {
+        const area = document.getElementById('practice-area');
+        area.innerHTML = '';
+        area.appendChild(document.getElementById('complete-template').content.cloneNode(true));
+        document.getElementById('progress-container').style.opacity = '0.3';
+    }
+
+    function restartPractice() {
+        baseCountOffset = currentCount;
+        const area = document.getElementById('practice-area');
+        area.innerHTML = originalPracticeHTML;
+        document.getElementById('progress-container').style.opacity = '1';
+        bindEvents();
+        updateProgressUI();
+        fetchNextWord();
+    }
+
+    function playAudio() {
+        if (!currentWord.spelling) return;
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(currentWord.spelling);
+        msg.lang = 'en-US';
+        window.speechSynthesis.speak(msg);
+    }
+</script>
+</body>
+</html>
