@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>学习统计 - IELTS Typer</title>
+    <script src="js/auth.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <style type="text/tailwindcss">
+        :root {
+            --primary-color: #568203;
+            --primary-pale: #f4f7ed;
+            --sketch-ink: #1a1a1a;
+            --green-light: #c5e8a0;
+            --green-mid:   #568203;
+            --green-dark:  #2e4801;
+        }
+        @layer utilities {
+            .sketch-border {
+                border: 2px solid var(--sketch-ink);
+                border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            }
+            .sketch-line {
+                height: 4px;
+                background: #1a1a1a;
+                border-radius: 50% 20% 40% 10%;
+            }
+            .paper-texture {
+                background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            }
+        }
+    </style>
+    <style>
+        .group:hover .group-hover\:block { display: block; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#568203",
+                        "primary-pale": "#f4f7ed",
+                        "sketch-ink": "#1a1a1a"
+                    },
+                    fontFamily: { "display": ["Lexend", "sans-serif"] }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-white font-display text-sketch-ink min-h-screen paper-texture">
+
+<header class="w-full border-b-2 border-sketch-ink/20 border-dashed sticky top-0 bg-white/90 backdrop-blur z-50">
+    <div class="relative flex justify-between items-center py-5 px-8 max-w-[1920px] mx-auto">
+        <div class="flex items-center gap-2 cursor-pointer hover:-translate-y-1 transition-transform z-20" onclick="location.href='home.html'">
+            <span class="material-icons text-primary text-3xl">pets</span>
+            <span class="font-bold text-2xl tracking-tight">IELTS Typer</span>
+        </div>
+
+        <nav class="hidden xl:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl px-12 justify-between items-center z-10 pointer-events-none">
+            <a href="home.html" class="w-32 text-center py-2.5 bg-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:bg-primary-pale transition-all cursor-pointer pointer-events-auto">主页</a>
+            <a href="review.html" class="w-32 text-center py-2.5 bg-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:bg-primary-pale transition-all cursor-pointer pointer-events-auto">错词本</a>
+            <a href="stats.html" class="w-32 text-center py-2.5 bg-primary text-white font-bold sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:-translate-y-1 transition-transform cursor-pointer pointer-events-auto">学习统计</a>
+            <a href="dictation.html" class="w-32 text-center py-2.5 bg-yellow-400 font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:-translate-y-1 hover:bg-yellow-300 transition-all cursor-pointer pointer-events-auto">听写模式</a>
+        </nav>
+
+        <div class="relative group z-20">
+            <div class="flex items-center gap-3 px-4 py-2 border-2 border-sketch-ink bg-white shadow-[4px_4px_0px_rgba(26,26,26,0.1)] cursor-pointer hover:bg-gray-50 transition-colors sketch-border">
+                <span class="text-sm font-bold" id="userNameDisplay">加载中...</span>
+                <div class="w-8 h-8 bg-primary flex items-center justify-center text-white text-sm font-bold border-2 border-sketch-ink rounded-full" id="userAvatar">U</div>
+            </div>
+            <div class="absolute top-full left-0 right-0 h-4 hidden group-hover:block"></div>
+            <div class="absolute right-0 top-full mt-3 w-56 bg-white sketch-border hidden group-hover:block z-50 shadow-xl">
+                <div class="p-2 space-y-1">
+                    <div class="px-4 py-3 cursor-pointer hover:bg-primary-pale rounded-lg flex items-center justify-between transition-colors" onclick="location.href='vip.html'">
+                        <span id="vipLabel" class="font-bold text-yellow-600 text-sm">💎 普通用户</span>
+                    </div>
+                    <div class="h-[2px] w-full sketch-line opacity-10 my-2"></div>
+                    <div class="px-4 py-2 text-sm font-medium cursor-pointer hover:bg-primary-pale rounded-lg transition-colors" onclick="logout()">退出登录</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-6 py-10 flex flex-col gap-10">
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 sketch-border shadow-[6px_6px_0px_rgba(26,26,26,0.05)] text-center">
+            <div class="text-xs font-bold opacity-40 uppercase tracking-widest mb-2">累计掌握单词</div>
+            <div class="text-4xl font-bold text-primary" id="totalLearned">—</div>
+        </div>
+        <div class="bg-white p-6 sketch-border shadow-[6px_6px_0px_rgba(26,26,26,0.05)] text-center">
+            <div class="text-xs font-bold opacity-40 uppercase tracking-widest mb-2">连续坚持天数</div>
+            <div class="text-4xl font-bold text-orange-500" id="streakDays">—</div>
+        </div>
+        <div class="bg-white p-6 sketch-border shadow-[6px_6px_0px_rgba(26,26,26,0.05)] text-center">
+            <div class="text-xs font-bold opacity-40 uppercase tracking-widest mb-2">今日目标进度</div>
+            <div class="text-4xl font-bold text-sketch-ink" id="todayPercent">—</div>
+        </div>
+    </div>
+
+    <div class="bg-white p-8 sketch-border shadow-[8px_8px_0px_rgba(26,26,26,0.05)]">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold flex items-center gap-2"><span class="material-icons text-primary">calendar_today</span>学习足迹</h3>
+            <div class="flex items-center gap-3">
+                <button onclick="changeMonth(-1)" class="w-8 h-8 flex items-center justify-center hover:bg-primary-pale rounded-full sketch-border transition-all"><span class="material-icons text-base">chevron_left</span></button>
+                <span class="font-bold text-sm w-28 text-center" id="calendarTitle">—</span>
+                <button onclick="changeMonth(1)" class="w-8 h-8 flex items-center justify-center hover:bg-primary-pale rounded-full sketch-border transition-all"><span class="material-icons text-base">chevron_right</span></button>
+            </div>
+        </div>
+        <div class="grid grid-cols-7 gap-2 mb-2 px-1 text-center text-xs font-bold opacity-40">
+            <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div class="text-orange-400">六</div><div class="text-orange-400">日</div>
+        </div>
+        <div class="grid grid-cols-7 gap-2 px-1" id="calendarDays"></div>
+    </div>
+
+    <div class="bg-white p-8 sketch-border shadow-[8px_8px_0px_rgba(26,26,26,0.05)] mb-20">
+        <div class="flex justify-between items-center mb-12">
+            <h3 class="text-xl font-bold flex items-center gap-2">
+                <span class="material-icons text-primary">show_chart</span>
+                成长曲线
+                <span class="text-xs font-normal opacity-40 ml-1">（单词数）</span>
+            </h3>
+            <div class="flex bg-primary-pale p-1 sketch-border">
+                <button id="tab-week" onclick="updateChart('week')" class="px-4 py-1 font-bold text-sm">周</button>
+                <button id="tab-month" onclick="updateChart('month')" class="px-4 py-1 font-bold text-sm">月</button>
+                <button id="tab-quarter" onclick="updateChart('quarter')" class="px-4 py-1 font-bold text-sm">季度</button>
+            </div>
+        </div>
+
+        <div class="relative flex items-center gap-4">
+            <button onclick="changeChartPeriod(-1)" class="z-10 w-10 h-10 flex-shrink-0 flex items-center justify-center hover:bg-primary-pale rounded-full sketch-border transition-all">
+                <span class="material-icons">chevron_left</span>
+            </button>
+
+            <div class="flex-1 h-80 relative">
+                <div id="chartPeriodTitle" class="absolute -top-10 left-1/2 -translate-x-1/2 text-lg font-extrabold text-sketch-ink opacity-80 tracking-tight"></div>
+                <canvas id="growthChart"></canvas>
+            </div>
+
+            <button onclick="changeChartPeriod(1)" class="z-10 w-10 h-10 flex-shrink-0 flex items-center justify-center hover:bg-primary-pale rounded-full sketch-border transition-all">
+                <span class="material-icons">chevron_right</span>
+            </button>
+        </div>
+    </div>
+</main>
+
+<script>
+    const currentUser = sessionStorage.getItem('loginUser');
+    let myChart;
+    let allCheckIns = [];
+    let calendarYear = new Date().getFullYear();
+    let calendarMonth = new Date().getMonth() + 1;
+    let currentChartOffset = 0;
+    let currentChartRange = 'week';
+
+    window.onload = async () => {
+        if (!currentUser) { location.href = 'login.html'; return; }
+
+        // 1. 先初始化 UI 基础
+        await initGlobalUI();
+
+        // 2. 🚀 关键：先创建图表容器，再加载数据
+        initChart();
+
+        // 3. 并行加载业务数据
+        await Promise.all([
+            loadDashboardData(),
+            loadAllCheckIns()
+        ]);
+
+        renderCalendar();
+        await updateChart('week'); // 初次进入默认显示周
+    };
+
+    // ── 仪表盘数据 ──
+    async function loadDashboardData() {
+        const res = await authFetch(`/api/auth/user/info?username=${currentUser}`);
+        const user = await res.json();
+        document.getElementById('totalLearned').innerText = (user.learnedTotal || 0).toLocaleString();
+        const goal = user.dailyGoal || 1;
+        document.getElementById('todayPercent').innerText = Math.min(Math.round((user.currentCount / goal) * 100), 100) + "%";
+        document.getElementById('streakDays').innerText = calculateStreak(user.lastDate);
+    }
+
+    // ── 全年打卡数据 ──
+    async function loadAllCheckIns() {
+        const res = await authFetch(`/api/stats/calendar?username=${currentUser}`);
+        allCheckIns = await res.json();
+    }
+
+    // ── 日历渲染逻辑 ──
+    function renderCalendar() {
+        document.getElementById('calendarTitle').innerText = `${calendarYear} 年 ${calendarMonth} 月`;
+        const container = document.getElementById('calendarDays'), checkInMap = new Map();
+        allCheckIns.forEach(c => checkInMap.set(c.date, c));
+        container.innerHTML = '';
+        const firstDow = new Date(calendarYear, calendarMonth - 1, 1).getDay();
+        const offset = (firstDow === 0) ? 6 : firstDow - 1;
+        const daysInMonth = new Date(calendarYear, calendarMonth, 0).getDate();
+        for (let i = 0; i < offset; i++) container.appendChild(document.createElement('div'));
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${calendarYear}-${String(calendarMonth).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            container.appendChild(createDayCell(d, checkInMap.get(dateStr), dateStr === new Date().toISOString().slice(0,10)));
+        }
+    }
+
+    function createDayCell(day, checkIn, isToday) {
+        const div = document.createElement('div');
+        div.className = 'aspect-square rounded-lg flex items-center justify-center text-xs font-bold relative select-none';
+        const minutes = checkIn?.studyMinutes || 0;
+        div.style.background = minutes > 120 ? 'var(--green-dark)' : minutes >= 30 ? 'var(--green-mid)' : minutes > 0 ? 'var(--green-light)' : '#e5e7eb';
+        div.style.color = minutes >= 30 ? 'white' : '#1a1a1a';
+        if (isToday) { div.style.outline = '2px solid var(--primary-color)'; div.style.outlineOffset = '2px'; }
+        div.innerText = day;
+        return div;
+    }
+
+    function changeMonth(delta) {
+        calendarMonth += delta;
+        if (calendarMonth > 12) { calendarMonth = 1; calendarYear++; }
+        else if (calendarMonth < 1) { calendarMonth = 12; calendarYear--; }
+        renderCalendar();
+    }
+
+    // ── 🚀 核心：初始化图表 (唯一版本) ──
+    function initChart() {
+        const ctx = document.getElementById('growthChart').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: '背诵单词',
+                    data: [],
+                    borderColor: '#568203',
+                    backgroundColor: 'rgba(86,130,3,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 6,
+                    pointHoverRadius: 9,
+                    pointBackgroundColor: '#568203',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: '#1a1a1a',
+                        padding: 10,
+                        bodyFont: { size: 16, weight: 'bold' },
+                        callbacks: { label: (ctx) => ` ${ctx.parsed.y} 个单词` }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 200,      // 🚀 默认 200 体量
+                        ticks: {
+                            stepSize: 50,       // 🚀 50 为刻度单位
+                            font: { weight: 'bold' }
+                        },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    },
+                    x: { ticks: { font: { weight: 'bold' } }, grid: { display: false } }
+                },
+                interaction: { mode: 'index', intersect: false }
+            }
+        });
+    }
+
+    // ── 🚀 核心：数据翻页 ──
+    async function changeChartPeriod(delta) {
+        currentChartOffset += delta;
+        if (currentChartOffset > 0) currentChartOffset = 0;
+        await updateChart(currentChartRange);
+    }
+
+    // ── 🚀 核心：更新与聚合逻辑 (唯一版本) ──
+    async function updateChart(view) {
+        if (!myChart) return;
+        if (currentChartRange !== view) { currentChartRange = view; currentChartOffset = 0; }
+
+        ['week', 'month', 'quarter'].forEach(v => {
+            const btn = document.getElementById(`tab-${v}`);
+            if(btn) btn.className = v === view ? 'px-4 py-1 font-bold text-sm bg-primary text-white sketch-border' : 'px-4 py-1 font-bold text-sm hover:bg-white transition-all';
+        });
+
+        try {
+            const res = await authFetch(`/api/stats/chart?username=${currentUser}&range=${view}&offset=${currentChartOffset}`);
+            const rawData = await res.json();
+
+            const baseDate = new Date();
+            if (view === 'week') baseDate.setDate(baseDate.getDate() + (currentChartOffset * 7));
+            else if (view === 'month') baseDate.setMonth(baseDate.getMonth() + (currentChartOffset * 3));
+            else if (view === 'quarter') baseDate.setFullYear(baseDate.getFullYear() + currentChartOffset);
+
+            let labels = [], dataPoints = [];
+            const targetYear = baseDate.getFullYear();
+
+            if (view === 'week') {
+                const monday = new Date(baseDate);
+                monday.setDate(baseDate.getDate() - (baseDate.getDay() === 0 ? 6 : baseDate.getDay() - 1));
+                const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+                document.getElementById('chartPeriodTitle').innerText = `${monday.getMonth()+1}.${monday.getDate()} - ${sunday.getMonth()+1}.${sunday.getDate()}`;
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date(monday); d.setDate(monday.getDate() + i);
+                    const dStr = d.toISOString().split('T')[0];
+                    labels.push(['一','二','三','四','五','六','日'][i]);
+                    dataPoints.push(rawData.find(x => x.date === dStr)?.wordCount || 0);
+                }
+            } else if (view === 'month') {
+                const qStart = Math.floor(baseDate.getMonth() / 3) * 3;
+                document.getElementById('chartPeriodTitle').innerText = `${targetYear}年 Q${Math.floor(qStart/3)+1}`;
+                for (let i = 0; i < 3; i++) {
+                    const m = qStart + i; labels.push(`${m+1}月`);
+                    // 🚀 修复 3.30 丢失：直接按字符串解析匹配
+                    const mSum = rawData.reduce((s, x) => {
+                        const parts = x.date.split('-');
+                        return (parseInt(parts[0]) === targetYear && parseInt(parts[1])-1 === m) ? s + x.wordCount : s;
+                    }, 0);
+                    dataPoints.push(mSum);
+                }
+            } else if (view === 'quarter') {
+                document.getElementById('chartPeriodTitle').innerText = `${targetYear} 年度统计`;
+                const qNames = ['第一季度','第二季度','第三季度','第四季度'];
+                for (let q = 0; q < 4; q++) {
+                    labels.push(qNames[q]);
+                    const qSum = rawData.reduce((s, x) => {
+                        const parts = x.date.split('-');
+                        return (parseInt(parts[0]) === targetYear && Math.floor((parseInt(parts[1])-1)/3) === q) ? s + x.wordCount : s;
+                    }, 0);
+                    dataPoints.push(qSum);
+                }
+            }
+            myChart.data.labels = labels;
+            myChart.data.datasets[0].data = dataPoints;
+            myChart.update();
+        } catch (e) { console.error("数据聚合异常", e); }
+    }
+
+    function calculateStreak(d) {
+        if (!d) return 0;
+        const last = new Date(d); last.setHours(0,0,0,0);
+        const today = new Date(); today.setHours(0,0,0,0);
+        const diff = Math.round((today - last) / 86400000);
+        return diff <= 1 ? 1 : 0;
+    }
+</script>
+</body>
+</html>

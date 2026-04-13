@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>错词本 - IELTS Typer</title>
+    <script src="js/auth.js"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+    <style type="text/tailwindcss">
+        :root {
+            --primary-color: #568203;
+            --primary-pale: #f4f7ed;
+            --sketch-ink: #1a1a1a;
+            --error-red: #F4520D;
+        }
+        @layer utilities {
+            .sketch-border {
+                border: 2px solid var(--sketch-ink);
+                border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+            }
+            .sketch-line {
+                height: 4px;
+                background: var(--sketch-ink);
+                border-radius: 50% 20% 40% 10%;
+            }
+            .paper-texture {
+                background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+            }
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#568203",
+                        "primary-pale": "#f4f7ed",
+                        "sketch-ink": "#1a1a1a",
+                        "error-red": "#F4520D"
+                    },
+                    fontFamily: { "display": ["Lexend", "sans-serif"] }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-white font-display text-sketch-ink min-h-screen paper-texture">
+
+<header class="w-full border-b-2 border-sketch-ink/20 border-dashed sticky top-0 bg-white/90 backdrop-blur z-50">
+    <div class="relative flex justify-between items-center py-5 px-8 max-w-[1920px] mx-auto">
+
+        <div class="flex items-center gap-2 cursor-pointer hover:-translate-y-1 transition-transform z-20" onclick="location.href='home.html'">
+            <span class="material-icons text-primary text-3xl">pets</span>
+            <span class="font-bold text-2xl tracking-tight">IELTS Typer</span>
+        </div>
+
+        <nav class="hidden xl:flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl px-12 justify-between items-center z-10 pointer-events-none">
+            <a href="home.html" class="w-32 text-center py-2.5 bg-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:bg-primary-pale transition-all cursor-pointer pointer-events-auto">主页</a>
+            <a href="review.html" class="w-32 text-center py-2.5 bg-primary text-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:-translate-y-1 transition-transform cursor-pointer pointer-events-auto">错词本</a>
+            <a href="stats.html" class="w-32 text-center py-2.5 bg-white font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:bg-primary-pale transition-all cursor-pointer pointer-events-auto">学习统计</a>
+            <a href="dictation.html" class="w-32 text-center py-2.5 bg-yellow-400 font-bold tracking-widest sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:-translate-y-1 hover:bg-yellow-300 transition-all cursor-pointer pointer-events-auto">听写模式</a>
+        </nav>
+
+        <div class="relative group z-20">
+            <div class="flex items-center gap-3 px-4 py-2 border-2 border-sketch-ink bg-white shadow-[4px_4px_0px_rgba(26,26,26,0.1)] cursor-pointer hover:bg-gray-50 transition-colors sketch-border">
+                <span class="text-sm font-bold" id="userNameDisplay">加载中...</span>
+                <div class="w-8 h-8 bg-primary flex items-center justify-center text-white text-sm font-bold border-2 border-sketch-ink rounded-full" id="userAvatar">U</div>
+            </div>
+            <div class="absolute top-full left-0 right-0 h-4 hidden group-hover:block"></div>
+            <div class="absolute right-0 top-full mt-3 w-56 bg-white sketch-border hidden group-hover:block z-50 shadow-xl">
+                <div class="p-2 space-y-1">
+                    <div class="px-4 py-3 cursor-pointer hover:bg-primary-pale rounded-lg flex items-center justify-between transition-colors" onclick="location.href='vip.html'">
+                        <span id="vipLabel" class="font-bold text-yellow-600 text-sm">💎 普通用户</span>
+                        <span class="text-xs opacity-50 font-bold">特权 ></span>
+                    </div>
+                    <div class="h-[2px] w-full sketch-line opacity-10 my-2"></div>
+                    <div class="px-4 py-2 text-sm font-medium cursor-pointer hover:bg-primary-pale rounded-lg transition-colors flex items-center gap-2" onclick="location.href='avatar.html'">
+                        <span class="material-icons text-sm opacity-60">face</span> 更换头像
+                    </div>
+                    <div class="px-4 py-2 text-sm font-medium cursor-pointer hover:bg-primary-pale rounded-lg transition-colors flex items-center gap-2" onclick="location.href='themes.html'">
+                        <span class="material-icons text-sm opacity-60">palette</span> 主题设置
+                    </div>
+                    <div class="h-[2px] w-full sketch-line opacity-10 my-2"></div>
+                    <div class="px-4 py-2 text-sm font-bold text-error-red cursor-pointer hover:bg-error-red hover:text-white sketch-border transition-colors flex items-center gap-2 mt-2" onclick="logout()">
+                        <span class="material-icons text-sm">logout</span> 退出登录
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-4xl mx-auto px-6 py-10 flex flex-col min-h-screen">
+    <div class="flex justify-between items-end mb-8 border-b-4 border-sketch-ink pb-4">
+        <div>
+            <h2 class="text-4xl font-bold mb-2 text-primary">错词急救站 🚑</h2>
+            <p class="opacity-60 font-medium italic">隐藏原词，直面内心。每组抽取5词进行魔鬼特训！</p>
+        </div>
+        <div class="text-right">
+            <div class="text-sm font-bold opacity-50 uppercase tracking-widest">待复习</div>
+            <div class="text-3xl font-bold"><span id="mistakeCount">0</span> <span class="text-lg">词</span></div>
+        </div>
+    </div>
+
+    <div class="flex flex-col gap-5" id="mistakeList">
+        <div class="text-center py-20 opacity-50 font-bold text-xl">加载中... 🐾</div>
+    </div>
+</main>
+
+<div id="challengeModal" class="fixed inset-0 z-[2000] flex items-center justify-center bg-black/80 backdrop-blur-sm transition-opacity hidden">
+    <div class="bg-white p-10 sketch-border max-w-lg w-full text-center shadow-2xl relative">
+        <button onclick="closeChallenge()" class="absolute top-4 right-4 text-sketch-ink/50 hover:text-sketch-ink transition-colors">
+            <span class="material-icons">close</span>
+        </button>
+
+        <div class="flex justify-between items-center mb-6 border-b-2 border-dashed border-gray-200 pb-4">
+            <h2 class="text-2xl font-bold text-error-red">绝地反击 ⚔️</h2>
+            <div class="text-sm font-bold opacity-60">本轮剩余: <span id="batchRemaining" class="text-primary text-lg">0</span> 词</div>
+        </div>
+
+        <p class="text-sm opacity-60 mb-6">每词需正确 3 次。只要错 1 次，连击清零！</p>
+
+        <div class="mb-8 h-32 flex flex-col justify-center">
+            <div id="challengeWord" class="text-5xl font-bold tracking-[0.2em] mb-3 text-sketch-ink/30">? ? ?</div>
+            <div id="challengePhonetic" class="opacity-50 font-mono mb-2">/wɜːd/</div>
+            <div id="challengeMeaning" class="font-bold text-lg opacity-80">n. 单词</div>
+        </div>
+
+        <div class="relative w-full max-w-xs mx-auto mb-4">
+            <input type="text" id="challengeInput" autocomplete="off" placeholder="根据释义拼写单词..."
+                   class="w-full text-center text-2xl font-bold border-b-4 border-sketch-ink outline-none py-2 bg-transparent text-sketch-ink transition-colors">
+        </div>
+
+        <div class="flex justify-center items-center gap-3 mt-8">
+            <span class="text-xs font-bold opacity-40 uppercase mr-2">当前词连击</span>
+            <div id="challengeProgress" class="flex gap-2">
+                <div class="w-6 h-6 rounded-full border-2 border-sketch-ink opacity-30 transition-all"></div>
+                <div class="w-6 h-6 rounded-full border-2 border-sketch-ink opacity-30 transition-all"></div>
+                <div class="w-6 h-6 rounded-full border-2 border-sketch-ink opacity-30 transition-all"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const currentUser = sessionStorage.getItem('loginUser');
+    let globalMistakeWords = [];
+    let challengeQueue = [];
+    let wordStreaks = {};
+    let currentChallengeWord = null;
+    let lastWordId = null;
+    let isWaitingForNext = false;
+
+    window.onload = async function() {
+        if (!currentUser) {
+            alert("喵？请先登录猫舍！");
+            location.href = 'login.html';
+            return;
+        }
+        document.getElementById('userNameDisplay').innerText = currentUser;
+        document.getElementById('userAvatar').innerText = currentUser.charAt(0).toUpperCase();
+        await loadMistakes();
+    };
+
+    async function loadMistakes() {
+        const listContainer = document.getElementById('mistakeList');
+        try {
+            if (!currentUser) return;
+
+            const res = await fetchWithAuth(`/api/auth/user/reviewWords?username=${currentUser}`);
+            if (res.ok) {
+                globalMistakeWords = await res.json();
+            } else {
+                listContainer.innerHTML = `<div class="text-center py-20 text-error-red font-bold text-xl">⚠️ 后端接口响应异常 (Status: ${res.status})</div>`;
+                return;
+            }
+
+            document.getElementById('mistakeCount').innerText = globalMistakeWords.length;
+            listContainer.innerHTML = '';
+
+            if (globalMistakeWords.length === 0) {
+                listContainer.innerHTML = `<div class="text-center py-20 opacity-50 font-bold text-xl">🎉 太棒了！你的错词本比脸还干净！</div>`;
+                return;
+            }
+
+            let htmlContent = '';
+            globalMistakeWords.forEach((word, index) => {
+                htmlContent += `
+                <div class="flex flex-col md:flex-row justify-between items-center bg-white p-5 sketch-border shadow-[4px_4px_0px_rgba(26,26,26,0.1)] hover:-translate-y-1 transition-transform" id="word-card-${word.id}">
+                    <div class="flex items-center gap-6 mb-4 md:mb-0 w-full md:w-auto">
+                        <div class="w-12 h-12 bg-primary-pale flex items-center justify-center sketch-border font-bold text-xl text-primary shrink-0">${index + 1}</div>
+                        <div>
+                            <div class="flex items-baseline gap-3">
+                                <span class="text-2xl font-bold tracking-[0.2em] text-sketch-ink/30">? ? ? ? ?</span>
+                                <span class="text-sm opacity-50 font-mono">${word.phonetic || ''}</span>
+                            </div>
+                            <div class="text-sm font-bold mt-1 opacity-80">${word.meaning}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6 w-full md:w-auto justify-end">
+                        <button onclick='startBatchChallenge(${word.id})' class="px-6 py-2 bg-sketch-ink text-white font-bold sketch-border hover:bg-primary hover:shadow-[2px_2px_0px_rgba(86,130,3,1)] transition-all flex items-center gap-2">
+                            <span class="material-icons text-sm">bolt</span> 开启特训
+                        </button>
+                    </div>
+                </div>`;
+            });
+            listContainer.innerHTML = htmlContent;
+        } catch (e) {
+            console.error("加载失败", e);
+            listContainer.innerHTML = `<div class="text-center py-20 text-error-red font-bold text-xl">⚠️ 无法连接到数据库，请检查后端。</div>`;
+        }
+    }
+
+    function startBatchChallenge(targetWordId) {
+        const targetWord = globalMistakeWords.find(w => w.id === targetWordId);
+        let pool = [targetWord];
+        let others = globalMistakeWords.filter(w => w.id !== targetWordId);
+        others.sort(() => 0.5 - Math.random());
+        pool = pool.concat(others.slice(0, 4));
+
+        challengeQueue = pool;
+        wordStreaks = {};
+        pool.forEach(w => wordStreaks[w.id] = 0);
+        lastWordId = null;
+        document.getElementById('challengeModal').classList.remove('hidden');
+        loadNextRandomWord();
+    }
+
+    function loadNextRandomWord() {
+        if (challengeQueue.length === 0) {
+            closeChallenge();
+            loadMistakes();
+            return;
+        }
+        document.getElementById('batchRemaining').innerText = challengeQueue.length;
+        let availableOptions = challengeQueue;
+        if (challengeQueue.length > 1 && lastWordId !== null) {
+            availableOptions = challengeQueue.filter(w => w.id !== lastWordId);
+        }
+        const randomIdx = Math.floor(Math.random() * availableOptions.length);
+        currentChallengeWord = availableOptions[randomIdx];
+        lastWordId = currentChallengeWord.id;
+
+        document.getElementById('challengeWord').innerText = "? ? ?";
+        document.getElementById('challengeWord').className = "text-5xl font-bold tracking-[0.2em] mb-3 text-sketch-ink/30";
+        document.getElementById('challengePhonetic').innerText = currentChallengeWord.phonetic || '';
+        document.getElementById('challengeMeaning').innerText = currentChallengeWord.meaning;
+        const inputField = document.getElementById('challengeInput');
+        inputField.value = '';
+        inputField.style.color = 'var(--sketch-ink)';
+        inputField.placeholder = "拼写出来...";
+        updateProgressDots(wordStreaks[currentChallengeWord.id]);
+        setTimeout(() => {
+            inputField.focus();
+            isWaitingForNext = false;
+        }, 100);
+    }
+
+    function updateProgressDots(streakCount) {
+        const dots = document.getElementById('challengeProgress').children;
+        for (let i = 0; i < 3; i++) {
+            dots[i].className = i < streakCount
+                ? 'w-6 h-6 rounded-full border-2 border-primary bg-primary opacity-100 transition-all'
+                : 'w-6 h-6 rounded-full border-2 border-sketch-ink opacity-30 transition-all';
+        }
+    }
+
+    function closeChallenge() {
+        document.getElementById('challengeModal').classList.add('hidden');
+        currentChallengeWord = null;
+    }
+
+    document.getElementById('challengeInput').addEventListener('keydown', async function(e) {
+        if (e.key === 'Enter' && !isWaitingForNext) {
+            isWaitingForNext = true;
+            const val = this.value.trim().toLowerCase();
+            const target = currentChallengeWord.spelling.toLowerCase();
+            const wordId = currentChallengeWord.id;
+
+            if (val === target) {
+                wordStreaks[wordId]++;
+                updateProgressDots(wordStreaks[wordId]);
+                this.value = '';
+                this.style.color = 'var(--primary-color)';
+                if (wordStreaks[wordId] >= 3) {
+                    this.placeholder = "🎉 完美消灭！";
+                    challengeQueue = challengeQueue.filter(w => w.id !== wordId);
+                    try {
+                        await fetchWithAuth(`/api/auth/user/removeMistake?username=${currentUser}&wordId=${wordId}`, { method: 'POST' });
+                    } catch (err) { console.log("删除请求失败"); }
+                    setTimeout(loadNextRandomWord, 800);
+                } else {
+                    this.placeholder = "✅ 正确！";
+                    setTimeout(loadNextRandomWord, 500);
+                }
+            } else {
+                wordStreaks[wordId] = 0;
+                updateProgressDots(0);
+                this.style.color = 'var(--error-red)';
+                this.value = '';
+                this.placeholder = '拼错啦！重新记一遍！';
+                const wordUI = document.getElementById('challengeWord');
+                wordUI.innerText = target;
+                wordUI.className = "text-5xl font-bold tracking-wider mb-3 text-error-red scale-110 transition-transform";
+                setTimeout(() => {
+                    wordUI.className = "text-5xl font-bold tracking-[0.2em] mb-3 text-sketch-ink/30";
+                    loadNextRandomWord();
+                }, 1500);
+            }
+        }
+    });
+</script>
+</body>
+</html>

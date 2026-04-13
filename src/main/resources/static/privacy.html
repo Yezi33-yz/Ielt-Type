@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <script src="js/auth.js"></script>
+    <meta charset="UTF-8">
+    <title>隐私与安全 - 雅思机考猫舍</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial; background: #f8f9fa; padding: 40px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .back-btn { cursor: pointer; color: #1387C0; margin-bottom: 20px; display: inline-block; }
+        .section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+        .row { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
+        .label { font-weight: bold; color: #2d3436; }
+        .value { color: #636e72; }
+        input[type="password"] { padding: 10px; width: 200px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn { padding: 8px 20px; background: #1387C0; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="back-btn" onclick="location.href='Home.html'">← 返回大本营</div>
+    <h2>🔐 隐私与安全设置</h2>
+
+    <div class="section">
+        <h3>账号绑定</h3>
+        <div class="row">
+            <span class="label">电子邮箱</span>
+            <span class="value" id="emailVal">未绑定</span>
+        </div>
+        <div class="row">
+            <span class="label">手机号码</span>
+            <span class="value" id="phoneVal">未绑定</span>
+        </div>
+        <div class="row">
+            <span class="label">社交账号</span>
+            <span class="value" id="socialVal">微信:未连 | QQ:未连</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <h3>修改登录密码</h3>
+        <div class="row">
+            <span class="label">新密码</span>
+            <input type="password" id="newPassword" placeholder="请输入新密码">
+        </div>
+        <div class="row">
+            <span></span>
+            <button class="btn" onclick="changePassword()">确认修改</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const currentUser = sessionStorage.getItem('loginUser');
+
+    window.onload = async function() {
+        if (!currentUser) { location.href='login.html'; return; }
+
+        // 加载用户信息显示
+        const res = await fetch(`/api/auth/user/info?username=${currentUser}`);
+        const user = await res.json();
+
+        document.getElementById('emailVal').innerText = user.email || "未绑定";
+        document.getElementById('phoneVal').innerText = user.phone || "未绑定";
+        document.getElementById('socialVal').innerText =
+            `微信:${user.wechatOpenid ? '已连' : '未连'} | QQ:${user.qqOpenid ? '已连' : '未连'}`;
+    };
+
+    async function changePassword() {
+        const newPwd = document.getElementById('newPassword').value;
+        if (!newPwd) return alert("密码不能为空！");
+
+        // 调用我们在 AuthController 里定义的接口
+        const res = await fetch(`/api/auth/user/changePassword?username=${currentUser}&newPwd=${newPwd}`, {
+            method: 'POST'
+        });
+
+        if (res.ok) {
+            alert("密码修改成功！请重新登录。");
+            sessionStorage.clear();
+            location.href = 'login.html';
+        }
+    }
+</script>
+</body>
+</html>
